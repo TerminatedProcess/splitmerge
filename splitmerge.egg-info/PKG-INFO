@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: splitmerge
+Version: 1.0.0
+Summary: Merge split safetensors files into a single file
+Author: Dev
+Requires-Python: >=3.8
+Requires-Dist: safetensors>=0.4.0
+Requires-Dist: torch>=2.0.0
+Requires-Dist: packaging>=21.0
+Requires-Dist: numpy>=1.20.0
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

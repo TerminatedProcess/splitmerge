@@ -1,0 +1,9 @@
+README.md
+setup.py
+splitmerge.py
+splitmerge.egg-info/PKG-INFO
+splitmerge.egg-info/SOURCES.txt
+splitmerge.egg-info/dependency_links.txt
+splitmerge.egg-info/entry_points.txt
+splitmerge.egg-info/requires.txt
+splitmerge.egg-info/top_level.txt

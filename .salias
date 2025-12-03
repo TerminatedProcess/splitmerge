@@ -1,0 +1,26 @@
+clear
+set -gx ENV_NAME '.venv'
+alias rmenv='rm -rf .envrc $ENV_NAME uv.lock; exit'
+alias mkenv='mkuv $ENV_NAME 3.12.10'
+alias run='clear;python splitmerge.py qwen3vl'
+
+function install
+   clear
+   uv pip install -r requirements.txt
+end
+
+function build
+   clear
+   echo "Building and installing splitmerge package..."
+
+   # Install in editable mode so changes are reflected immediately
+   uv pip install -e .
+
+   echo ""
+   echo "✅ splitmerge installed as system command!"
+   echo ""
+   echo "Usage from anywhere:"
+   echo "  splitmerge /path/to/model_folder"
+   echo ""
+   echo "The command will use the virtual environment automatically."
+end
