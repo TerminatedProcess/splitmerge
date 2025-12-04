@@ -1,14 +1,33 @@
 #!/usr/bin/env python3
 """
-Merge split safetensors files into a single file.
+Split Merge - Safetensors Shard Merger
 
-Standalone utility - only depends on safetensors library.
+A standalone utility to merge split safetensors model files into a single file.
+Large AI models from HuggingFace are often distributed as multiple shards
+(e.g., model-00001-of-00004.safetensors). This tool combines them into one
+file for easier use with ComfyUI, InvokeAI, and other AI tools.
+
+Features:
+    - Automatic shard detection and validation
+    - Git LFS pointer detection (undownloaded files)
+    - Sequential numbering verification
+    - Size validation after merge
+    - Smart output naming based on folder name
 
 Usage:
     python splitmerge.py /path/to/model_folder
 
+    Or after installation:
+    splitmerge /path/to/model_folder
+
 Example:
-    python splitmerge.py ./qwen3vl
+    splitmerge ./qwen3vl
+
+    Output: ./qwen3vl/merged/qwen3vl.safetensors
+
+Author: Dev
+License: MIT
+Credits: Merge logic adapted from reshard-safetensors by NotTheStallion
 """
 
 import sys
@@ -25,10 +44,20 @@ def is_lfs_pointer(file_path: Path) -> bool:
     """
     Check if a file is a Git LFS pointer instead of actual data.
 
-    LFS pointers are small text files that look like:
-    version https://git-lfs.github.com/spec/v1
-    oid sha256:...
-    size ...
+    Git LFS (Large File Storage) replaces large files with small text pointers
+    during git clone. Users must run 'git lfs pull' to download actual files.
+    This function detects those pointers before attempting to merge.
+
+    LFS pointers are small text files (< 200 bytes) that look like:
+        version https://git-lfs.github.com/spec/v1
+        oid sha256:abc123...
+        size 12345678
+
+    Args:
+        file_path: Path to the file to check
+
+    Returns:
+        bool: True if file is an LFS pointer, False if actual data
     """
     # LFS pointers are always very small (< 200 bytes)
     if file_path.stat().st_size > 200:
@@ -47,11 +76,18 @@ def merge_safetensor_files(shard_files, output_file):
     """
     Merge multiple safetensors files into a single file.
 
-    Borrowed from reshard-safetensors project.
+    Reads all tensors from each shard file and combines them into a single
+    safetensors file. Metadata from the first shard is preserved in the output.
+
+    This implementation is adapted from the reshard-safetensors project by
+    NotTheStallion: https://github.com/NotTheStallion/reshard-safetensors
 
     Args:
-        shard_files: List of paths to safetensors files to merge
-        output_file: Path for output merged file
+        shard_files: List of paths to safetensors shard files to merge
+        output_file: Path where the merged file will be saved
+
+    Raises:
+        Exception: If files cannot be read or merged (propagated from safetensors)
     """
     tensors = {}
     metadata = None
@@ -73,10 +109,21 @@ def merge_safetensor_files(shard_files, output_file):
 
 def get_split_files(folder_path: Path):
     """
-    Find all model-*-of-*.safetensors files in folder.
+    Find all model-*-of-*.safetensors files in the specified folder.
+
+    Scans for files matching the HuggingFace shard naming pattern:
+    model-00001-of-00004.safetensors, model-00002-of-00004.safetensors, etc.
+
+    Validates that all files agree on the total shard count (the "of-NNNN" part).
+
+    Args:
+        folder_path: Path object pointing to folder containing shard files
 
     Returns:
-        tuple: (shard_files, total_expected) or (None, None) if invalid
+        tuple: (shard_files, total_expected) where:
+            - shard_files: List of Path objects sorted by shard number
+            - total_expected: Integer count of total shards expected
+            - (None, None): If no valid shard files found or inconsistent counts
     """
     # Pattern: model-00001-of-00004.safetensors
     pattern = re.compile(r'model-(\d+)-of-(\d+)\.safetensors')
@@ -110,10 +157,21 @@ def get_split_files(folder_path: Path):
 
 def validate_shards(shard_files, total_expected):
     """
-    Validate that all shards are present and not LFS pointers.
+    Validate that all shards are present, sequential, and not LFS pointers.
+
+    Performs three validation checks:
+    1. Count check: Ensures we have all expected shards
+    2. Sequential check: Verifies numbering is 00001, 00002, 00003, etc.
+    3. LFS check: Detects if files are Git LFS pointers (not downloaded)
+
+    Args:
+        shard_files: List of Path objects for shard files (must be sorted)
+        total_expected: Integer count of total shards that should exist
 
     Returns:
-        tuple: (success, error_message)
+        tuple: (success, error_message) where:
+            - success: Boolean indicating if validation passed
+            - error_message: String describing the error, or None if success
     """
     # Check count
     if len(shard_files) != total_expected:
@@ -138,10 +196,30 @@ def validate_shards(shard_files, total_expected):
 
 def merge_model_shards(folder_path: str):
     """
-    Main function to merge split safetensors files.
+    Main orchestration function to merge split safetensors files.
+
+    This function coordinates the entire merge process:
+    1. Validates the folder exists
+    2. Discovers shard files
+    3. Validates all shards are present and valid
+    4. Creates output directory
+    5. Merges the files
+    6. Verifies the output
 
     Args:
-        folder_path: Path to folder containing split files
+        folder_path: String path to folder containing model-*-of-*.safetensors files
+
+    Returns:
+        bool: True if merge succeeded, False otherwise
+
+    Example:
+        >>> merge_model_shards("./qwen3vl")
+        📁 Processing folder: qwen3vl
+        ✓ Found 4 shard files (expected: 4)
+        ✓ All shards validated (present and not LFS pointers)
+        ...
+        ✅ Merge complete!
+        True
     """
     folder = Path(folder_path).resolve()
 
@@ -227,17 +305,28 @@ def merge_model_shards(folder_path: str):
 
 
 def main():
+    """
+    Command-line entry point for the splitmerge utility.
+
+    Parses command-line arguments and invokes the merge process.
+    Exits with status code 0 on success, 1 on failure.
+    """
     if len(sys.argv) != 2:
-        print("Usage: python merge_shards.py /path/to/model_folder")
+        print("Split Merge - Safetensors Shard Merger")
+        print("")
+        print("Usage: splitmerge /path/to/model_folder")
+        print("   or: python splitmerge.py /path/to/model_folder")
         print("")
         print("Example:")
-        print("  python merge_shards.py ./qwen3vl")
+        print("  splitmerge ./qwen3vl")
         print("")
         print("This will:")
         print("  1. Find all model-*-of-*.safetensors files")
         print("  2. Validate all shards are present (not LFS pointers)")
         print("  3. Merge into a single file: qwen3vl.safetensors")
         print("  4. Save in subfolder: qwen3vl/merged/")
+        print("")
+        print("For more information: https://github.com/yourusername/splitmerge")
         sys.exit(1)
 
     folder_path = sys.argv[1]
