@@ -48,6 +48,9 @@ uv.lock
 htmlcov/
 .tox/
 
+# Claude
+sudoers-splitmerge
+
 # Model Files (large files that shouldn't be in git)
 *.safetensors
 *.ckpt
