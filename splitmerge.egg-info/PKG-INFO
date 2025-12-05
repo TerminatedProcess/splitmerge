@@ -67,12 +67,14 @@ This tool merges them into a single `.safetensors` file for easier use with tool
 git clone https://github.com/yourusername/splitmerge.git
 cd splitmerge
 
-# Install the pre-built wheel to your user directory
-python3 -m pip install --user dist/splitmerge-1.0.0-py3-none-any.whl
+# Install with pipx (recommended for Arch/Garuda Linux)
+pipx install dist/splitmerge-1.0.0-py3-none-any.whl
 
 # Use from anywhere
 splitmerge /path/to/model_folder
 ```
+
+**Note for Arch/Garuda Users**: Use `pipx` instead of `pip` due to PEP 668. Install pipx with: `sudo pacman -S python-pipx`
 
 ### Option 2: Build and Install from Source
 
@@ -84,8 +86,8 @@ cd splitmerge
 # Build the wheel
 python3 -m build
 
-# Install globally for your user
-python3 -m pip install --user dist/splitmerge-1.0.0-py3-none-any.whl
+# Install globally with pipx
+pipx install dist/splitmerge-1.0.0-py3-none-any.whl
 
 # Use from anywhere
 splitmerge /path/to/model_folder

@@ -3,12 +3,45 @@ set -gx ENV_NAME '.venv'
 alias rmenv='rm -rf .envrc $ENV_NAME uv.lock; exit'
 alias mkenv='mkuv $ENV_NAME 3.12.10'
 alias run='clear;python splitmerge.py'
+alias build='buildwheel;installwheel'
 
 function installenv
    # Development setup: install dependencies into .venv for testing
    # Run rmenv first (to remove old env), re-open terminal, run mkenv, then run install
    clear
    uv pip install -r requirements.txt
+end
+
+function uninstallwheel
+   pipx uninstall splitmerge
+end
+
+function buildwheel
+   # Build wheel for distribution and installation
+   # After building, install globally with: pipx install dist/splitmerge-1.0.0-py3-none-any.whl
+   clear
+   echo "Building splitmerge wheel package..."
+   echo ""
+
+   # Clean old build artifacts
+   echo "🗑️  Cleaning old build artifacts..."
+   rm -rf build/ dist/ *.egg-info/
+   echo ""
+
+   # Install build tool if needed
+   uv pip install build
+
+   # Build the wheel
+   python -m build
+
+   echo ""
+   echo "✅ Wheel built successfully!"
+   echo ""
+   echo "Install globally with pipx (recommended for Arch/Garuda):"
+   echo "  pipx install dist/splitmerge-1.0.0-py3-none-any.whl"
+   echo ""
+   echo "Or upgrade if already installed:"
+   echo "  pipx upgrade splitmerge"
 end
 
 function installwheel
@@ -52,30 +85,3 @@ function installwheel
    echo "Or: which splitmerge"
 end
 
-function build
-   # Build wheel for distribution and installation
-   # After building, install globally with: pipx install dist/splitmerge-1.0.0-py3-none-any.whl
-   clear
-   echo "Building splitmerge wheel package..."
-   echo ""
-
-   # Clean old build artifacts
-   echo "🗑️  Cleaning old build artifacts..."
-   rm -rf build/ dist/ *.egg-info/
-   echo ""
-
-   # Install build tool if needed
-   uv pip install build
-
-   # Build the wheel
-   python -m build
-
-   echo ""
-   echo "✅ Wheel built successfully!"
-   echo ""
-   echo "Install globally with pipx (recommended for Arch/Garuda):"
-   echo "  pipx install dist/splitmerge-1.0.0-py3-none-any.whl"
-   echo ""
-   echo "Or upgrade if already installed:"
-   echo "  pipx upgrade splitmerge"
-end
