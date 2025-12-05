@@ -45,7 +45,7 @@ setup(
             'splitmerge=splitmerge:main',
         ],
     },
-    python_requires='>=3.8',
+    python_requires='>=3.8,<3.13',  # PyTorch compatibility - avoid Python 3.13
     project_urls={
         'Bug Reports': 'https://github.com/yourusername/splitmerge/issues',
         'Source': 'https://github.com/yourusername/splitmerge',
