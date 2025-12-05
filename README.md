@@ -17,42 +17,54 @@ This tool merges them into a single `.safetensors` file for easier use with tool
 
 ## Quick Start
 
-### Option 1: Install from Pre-built Wheel (Recommended)
+### Prerequisites
 
-```bash
-# Download or clone this repository
-git clone https://github.com/yourusername/splitmerge.git
-cd splitmerge
+- **Python 3.12.10** (tested and recommended - Python 3.13+ NOT supported due to PyTorch compatibility)
+- **pipx** for installation: `sudo pacman -S python-pipx` (Arch/Garuda)
+- **uv** package manager for building: Install from [astral.sh/uv](https://astral.sh/uv)
 
-# Install with pipx (recommended for Arch/Garuda Linux)
-pipx install dist/splitmerge-1.0.0-py3-none-any.whl
-
-# Use from anywhere
-splitmerge /path/to/model_folder
-```
-
-**Note for Arch/Garuda Users**: Use `pipx` instead of `pip` due to PEP 668. Install pipx with: `sudo pacman -S python-pipx`
-
-### Option 2: Build and Install from Source
+### Option 1: Build and Install (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/splitmerge.git
 cd splitmerge
 
-# Build the wheel
-python3 -m build
+# Create virtual environment with Python 3.12.10 using uv
+# Review file .salias to make it easy to quickly install.
+mkuv .venv 3.12.10
+source .venv/bin/activate  # or use direnv
 
-# Install globally with pipx
-pipx install dist/splitmerge-1.0.0-py3-none-any.whl
+# Install build dependencies
+uv pip install -r requirements.txt
+uv pip install build
+
+# Build the wheel
+python -m build
+
+# Install globally with pipx (using the .venv Python 3.12.10)
+pipx install --python .venv/bin/python dist/splitmerge-1.0.0-py3-none-any.whl
 
 # Use from anywhere
 splitmerge /path/to/model_folder
 ```
 
-### Option 3: Direct Usage (No Installation)
+**For Fish shell users**: Use the included `.salias` shortcuts:
+```fish
+source .salias
+mkenv          # Create .venv with Python 3.12.10
+installenv     # Install dependencies
+build          # Build wheel and install with pipx
+```
+
+### Option 2: Direct Usage (No Installation)
 
 ```bash
+# Create virtual environment with Python 3.12.10
+# Note: Requires Python 3.12.10 to be installed via uv or system package manager
+python3.12 -m venv .venv
+source .venv/bin/activate
+
 # Install dependencies
 pip install -r requirements.txt
 
@@ -60,10 +72,12 @@ pip install -r requirements.txt
 python splitmerge.py /path/to/model_folder
 ```
 
+**Important**: This project is tested with Python 3.12.10 only. Python 3.13+ will cause segmentation faults due to PyTorch incompatibility.
+
 ## Usage Example
 
 ```bash
-splitmerge ./qwen3vl # model folder containing model-00001-0f-00004.safetensors, model-00002, model-00003, model00004
+splitmerge ./qwen3vl # model folder containing model-00001-of-00004.safetensors, model-00002, model-00003, model-00004
 ```
 ## Features
 
@@ -120,14 +134,17 @@ mkenv          # Create new virtual environment (.venv with Python 3.12.10)
 rmenv          # Remove virtual environment and exit
 
 # Development
-install        # Install dependencies from requirements.txt
-build          # Install package as system command (editable mode)
+installenv     # Install dependencies from requirements.txt
+buildwheel     # Build wheel package
+installwheel   # Install wheel with pipx
+build          # Build and install (buildwheel + installwheel)
 run            # Quick test run with example model folder
 
 # Usage examples:
 source .salias   # Load aliases in current session
-install          # Install all dependencies
-build            # Make 'splitmerge' available system-wide
+mkenv            # Create .venv with Python 3.12.10
+installenv       # Install all dependencies
+build            # Build wheel and install globally with pipx
 run              # Test with qwen3vl folder
 ```
 
@@ -135,9 +152,9 @@ run              # Test with qwen3vl folder
 
 ## Dependencies
 
-- **Python**: 3.8 or higher
-- **safetensors**: For reading/writing safetensors files (≥0.4.0)
-- **torch**: PyTorch framework (≥2.0.0)
+- **Python**: 3.12.10 (tested - Python 3.13+ NOT supported)
+- **safetensors**: For merging model-#-of-# sharded safetensors files (≥0.4.0)
+- **torch**: PyTorch framework for tensor operations (≥2.0.0)
 - **packaging**: Python packaging utilities (≥21.0)
 - **numpy**: Numerical computing library (≥1.20.0)
 
@@ -171,6 +188,16 @@ splitmerge/
    - Verifies output size matches input (within 5% tolerance)
 
 ## Troubleshooting
+
+**Error: "Package 'splitmerge' requires a different Python: 3.13.7 not in '<3.13,>=3.8'"**
+- You're using Python 3.13+ which is not supported
+- Install Python 3.12.10 using `uv`: `uv python install 3.12.10`
+- Use pipx with Python 3.12: `pipx install --python /path/to/python3.12 <wheel>`
+
+**Segmentation fault when running splitmerge**
+- This is caused by PyTorch incompatibility with Python 3.13+
+- Uninstall: `pipx uninstall splitmerge`
+- Reinstall with Python 3.12.10 (see Quick Start)
 
 **Error: "LFS pointer detected (not downloaded)"**
 - Your model files are Git LFS pointers, not actual data

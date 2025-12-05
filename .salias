@@ -77,7 +77,7 @@ function installwheel
       pipx upgrade splitmerge
    else
       echo "Installing splitmerge for the first time..."
-      pipx install dist/splitmerge-1.0.0-py3-none-any.whl
+      pipx install --python /home/dev/work/media/hubprojects/splitmerge/.venv/bin/python /home/dev/work/media/hubprojects/splitmerge/dist/splitmerge-1.0.0-py3-none-any.whl
    end
 
    echo ""
