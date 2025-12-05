@@ -2,25 +2,80 @@ clear
 set -gx ENV_NAME '.venv'
 alias rmenv='rm -rf .envrc $ENV_NAME uv.lock; exit'
 alias mkenv='mkuv $ENV_NAME 3.12.10'
-alias run='clear;python splitmerge.py qwen3vl'
+alias run='clear;python splitmerge.py'
 
-function install
+function installenv
+   # Development setup: install dependencies into .venv for testing
+   # Run rmenv first (to remove old env), re-open terminal, run mkenv, then run install
    clear
    uv pip install -r requirements.txt
 end
 
-function build
+function installwheel
+   # Install built wheel with pipx
+   # Run after 'build' to install splitmerge globally
    clear
-   echo "Building and installing splitmerge package..."
+   echo "Installing splitmerge with pipx..."
+   echo ""
 
-   # Install in editable mode so changes are reflected immediately
-   uv pip install -e .
+   # Check if pipx is installed
+   if not command -v pipx >/dev/null 2>&1
+      echo "❌ Error: pipx is not installed!"
+      echo ""
+      echo "Install pipx with:"
+      echo "  sudo pacman -S python-pipx"
+      echo ""
+      echo "Then run this install function again."
+      return 1
+   end
+
+   # Check if wheel exists
+   if not test -f dist/splitmerge-1.0.0-py3-none-any.whl
+      echo "❌ Error: Wheel file not found!"
+      echo "   Run 'build' first to create the wheel."
+      return 1
+   end
+
+   # Check if already installed
+   if pipx list | grep -q splitmerge
+      echo "splitmerge is already installed. Upgrading..."
+      pipx upgrade splitmerge
+   else
+      echo "Installing splitmerge for the first time..."
+      pipx install dist/splitmerge-1.0.0-py3-none-any.whl
+   end
 
    echo ""
-   echo "✅ splitmerge installed as system command!"
+   echo "✅ Installation complete!"
    echo ""
-   echo "Usage from anywhere:"
-   echo "  splitmerge /path/to/model_folder"
+   echo "Test with: splitmerge --help"
+   echo "Or: which splitmerge"
+end
+
+function build
+   # Build wheel for distribution and installation
+   # After building, install globally with: pipx install dist/splitmerge-1.0.0-py3-none-any.whl
+   clear
+   echo "Building splitmerge wheel package..."
    echo ""
-   echo "The command will use the virtual environment automatically."
+
+   # Clean old build artifacts
+   echo "🗑️  Cleaning old build artifacts..."
+   rm -rf build/ dist/ *.egg-info/
+   echo ""
+
+   # Install build tool if needed
+   uv pip install build
+
+   # Build the wheel
+   python -m build
+
+   echo ""
+   echo "✅ Wheel built successfully!"
+   echo ""
+   echo "Install globally with pipx (recommended for Arch/Garuda):"
+   echo "  pipx install dist/splitmerge-1.0.0-py3-none-any.whl"
+   echo ""
+   echo "Or upgrade if already installed:"
+   echo "  pipx upgrade splitmerge"
 end
