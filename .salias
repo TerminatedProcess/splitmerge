@@ -14,6 +14,8 @@ end
 
 function uninstallwheel
    pipx uninstall splitmerge
+   uv python uninstall 3.12.10
+   rmenv # run mkenv on re-opening terminal
 end
 
 function buildwheel
