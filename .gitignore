@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.venv/
 .Python
 build/
 develop-eggs/
@@ -70,4 +71,3 @@ qwen3vl/
 .DS_Store
 Thumbs.db
 
-.venv/
