@@ -2,7 +2,7 @@ clear
 set -gx ENV_NAME '.venv'
 alias run='clear;python splitmerge.py'
 alias build='buildwheel;installwheel'
-source /home/dev/work/media/hubroot/splitmerge/.salias_f
+source /home/dev/work/ai/media/splitmerge/.salias_f
 
 # functions
 alias installenv=_installenv
